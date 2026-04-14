@@ -4,7 +4,7 @@
 **Thành viên:**
 | Tên                | Vai trò          | Email           |
 | ------------------ | ---------------- | --------------- |
-| Nguyễn Huy Tú      | Supervisor Owner | tv_a@domain.com |
+| Nguyễn Huy Tú      | Supervisor Owner | nguyenhuytu724@gmail.com |
 | Phạm Quốc Vương    | Worker Owner     | tv_b@domain.com |
 | Truưng Minh Phuớc  | MCP Owner        | tv_c@domain.com |
 | Nguyễn Thành Trung | Trace Owner      | tv_d@domain.com |
