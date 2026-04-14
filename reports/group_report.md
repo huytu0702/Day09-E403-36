@@ -7,7 +7,7 @@
 | Nguyễn Huy Tú      | Supervisor Owner | nguyenhuytu724@gmail.com |
 | Phạm Quốc Vương    | Worker Owner     | phamvuong2622004@gmail.com |
 | Trương Minh Phuớc  | MCP Owner        | tv_c@domain.com |
-| Nguyễn Thành Trung | Trace Owner      | tv_d@domain.com |
+| Nguyễn Thành Trung | Trace Owner      | trung.nt202717@gmail.com |
 | Lương Hoàng Anh    | Docs Owner       | hitomisaichi@gmail.com |
 
 **Ngày nộp:** 2026-04-14  
