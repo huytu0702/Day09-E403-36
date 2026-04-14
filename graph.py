@@ -15,6 +15,9 @@ import sys
 from datetime import datetime
 from typing import TypedDict, Literal, Optional
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Uncomment nếu dùng LangGraph:
 # from langgraph.graph import StateGraph, END
 
@@ -73,6 +76,7 @@ def make_initial_state(task: str) -> AgentState:
         "latency_ms": None,
         "run_id": f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         "worker_io_logs": [],
+        "timestamp": datetime.now().isoformat(),
     }
 
 

@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-04-14T16:16:45.936148",
+  "day08_single_agent": {
+    "total_questions": 15,
+    "architecture": "single-agent monolith RAG (retrieve → generate)",
+    "avg_confidence": "N/A (Day 08 không có confidence metric riêng)",
+    "avg_latency_ms": "N/A (Day 08 không có trace)",
+    "routing_visibility": false,
+    "worker_isolation": false,
+    "mcp_support": false,
+    "hitl_support": false,
+    "abstain_rate": "N/A",
+    "multi_hop_accuracy": "N/A"
+  },
+  "day09_multi_agent": {
+    "total_traces": 15,
+    "routing_distribution": {
+      "retrieval_worker": "8/15 (53%)",
+      "policy_tool_worker": "7/15 (46%)"
+    },
+    "avg_confidence": 0.517,
+    "avg_latency_ms": 3089,
+    "mcp_usage_rate": "2/15 (13%)",
+    "hitl_rate": "1/15 (6%)",
+    "top_sources": [
+      [
+        "sla_p1_2026.txt",
+        6
+      ],
+      [
+        "access_control_sop.txt",
+        6
+      ],
+      [
+        "policy_refund_v4.txt",
+        4
+      ],
+      [
+        "it_helpdesk_faq.txt",
+        3
+      ],
+      [
+        "hr_leave_policy.txt",
+        2
+      ]
+    ],
+    "architecture": "supervisor-worker pattern (supervisor → [retrieval|policy|human_review] → synthesis)",
+    "routing_visibility": true,
+    "worker_isolation": true,
+    "mcp_support": true,
+    "hitl_support": true
+  },
+  "analysis": {
+    "routing_visibility": "Day 09 có route_reason cho từng câu → dễ debug hơn. Day 08 không có routing info.",
+    "latency_tradeoff": "Day 09 trung bình ~3-4s/câu do nhiều worker calls + LLM. Day 08 có thể nhanh hơn (~1-2s) vì chỉ 1 LLM call nhưng không có trace.",
+    "debuggability": "Day 09: xem trace → kiểm tra route → test worker độc lập (~5 phút). Day 08: đọc toàn bộ pipeline code (~15-20 phút).",
+    "mcp_benefit": "Day 09 có thể mở rộng capability qua MCP tools mà không cần sửa core code. Day 08 phải hard-code mọi logic.",
+    "accuracy_observation": "Day 09 xử lý tốt multi-hop questions (q13, q15) nhờ policy_tool_worker + retrieval_worker phối hợp. Day 08 khó xử lý cross-document.",
+    "abstain_quality": "Day 09 abstain đúng q09 (ERR-403-AUTH) với confidence=0.30 + HITL trigger. Day 08 có thể hallucinate.",
+    "cost_tradeoff": "Day 09 tốn 2-3 LLM calls/câu (retrieval embed + synthesis). Day 08 tốn 1 LLM call. Trade-off: chất lượng vs chi phí."
+  }
+}
