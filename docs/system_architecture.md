@@ -102,7 +102,7 @@ Retrieval Worker     Policy Tool Worker
 | search_kb | query, top_k | chunks, sources |
 | get_ticket_info | ticket_id | ticket details |
 | check_access_permission | access_level, requester_role | can_grant, approvers |
-| ___________________ | ___________________ | ___________________ |
+| create_ticket | priority, title, description | ticket_id, url, created_at |
 
 ---
 

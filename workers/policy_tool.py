@@ -31,31 +31,51 @@ def _call_mcp_tool(tool_name: str, tool_input: dict) -> dict:
     """
     Gọi MCP tool.
 
-    Sprint 3 TODO: Implement bằng cách import mcp_server hoặc gọi HTTP.
-
-    Hiện tại: Import trực tiếp từ mcp_server.py (trong-process mock).
+    Hỗ trợ gọi HTTP server nếu nó đang chạy ở localhost:8000.
+    Nếu không, gọi fallback trực tiếp qua mcp_server.dispatch_tool.
     """
     from datetime import datetime
+    import urllib.request
+    import json
 
     try:
-        # TODO Sprint 3: Thay bằng real MCP client nếu dùng HTTP server
-        from mcp_server import dispatch_tool
-        result = dispatch_tool(tool_name, tool_input)
-        return {
-            "tool": tool_name,
-            "input": tool_input,
-            "output": result,
-            "error": None,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        return {
-            "tool": tool_name,
-            "input": tool_input,
-            "output": None,
-            "error": {"code": "MCP_CALL_FAILED", "reason": str(e)},
-            "timestamp": datetime.now().isoformat(),
-        }
+        # Thử gọi qua HTTP (Advanced)
+        url = "http://localhost:8000/tools/call"
+        req = urllib.request.Request(url, method="POST")
+        req.add_header('Content-Type', 'application/json')
+        data = json.dumps({"tool": tool_name, "input": tool_input}).encode('utf-8')
+        
+        with urllib.request.urlopen(req, data=data, timeout=5) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            return {
+                "tool": tool_name,
+                "input": tool_input,
+                "output": result.get("result", result),
+                "error": None,
+                "timestamp": datetime.now().isoformat(),
+            }
+    except Exception as http_e:
+        # Fallback (Standard)
+        try:
+            from mcp_server import dispatch_tool
+            result = dispatch_tool(tool_name, tool_input)
+            error_val = result.get("error") if isinstance(result, dict) and "error" in result else None
+            output_val = None if error_val else result
+            return {
+                "tool": tool_name,
+                "input": tool_input,
+                "output": output_val,
+                "error": error_val,
+                "timestamp": datetime.now().isoformat(),
+            }
+        except Exception as e:
+            return {
+                "tool": tool_name,
+                "input": tool_input,
+                "output": None,
+                "error": {"code": "MCP_CALL_FAILED", "reason": str(e)},
+                "timestamp": datetime.now().isoformat(),
+            }
 
 
 # ─────────────────────────────────────────────
