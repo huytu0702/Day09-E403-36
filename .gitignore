@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Local artifacts / traces
+artifacts/
+chroma_db/
+.env
