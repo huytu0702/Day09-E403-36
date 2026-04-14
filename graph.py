@@ -84,47 +84,75 @@ def supervisor_node(state: AgentState) -> AgentState:
     2. Có cần MCP tool không
     3. Có risk cao cần HITL không
 
-    TODO Sprint 1: Implement routing logic dựa vào task keywords.
+    Routing priority (từ cao xuống thấp):
+      policy/access keywords  → policy_tool_worker
+      SLA/ticket keywords     → retrieval_worker
+      default                 → retrieval_worker
+      unknown error + risk    → human_review (override)
     """
+    import re
+
     task = state["task"].lower()
     state["history"].append(f"[supervisor] received task: {state['task'][:80]}")
 
-    # --- TODO: Implement routing logic ---
-    # Gợi ý:
-    # - "hoàn tiền", "refund", "flash sale", "license" → policy_tool_worker
-    # - "cấp quyền", "access level", "level 3", "emergency" → policy_tool_worker
-    # - "P1", "escalation", "sla", "ticket" → retrieval_worker
-    # - mã lỗi không rõ (ERR-XXX), không đủ context → human_review
-    # - còn lại → retrieval_worker
+    # ── keyword sets ──────────────────────────────────────────────
+    policy_keywords = [
+        "hoàn tiền", "refund", "flash sale", "license",
+        "cấp quyền", "access", "level 3", "policy", "quyền",
+        "emergency",                                    # access emergency → policy
+    ]
+    retrieval_keywords = [
+        "p1", "escalation", "sla", "ticket", "incident",
+    ]
+    risk_keywords = [
+        "khẩn cấp", "2am", "không rõ", "urgent",
+    ]
+    # Mã lỗi dạng ERR-XXX hoặc ERR_XXX
+    unknown_error_re = re.compile(r'\berr[-_]\w+', re.IGNORECASE)
 
-    route = "retrieval_worker"         # TODO: thay bằng logic thực
-    route_reason = "default route"    # TODO: thay bằng lý do thực
-    needs_tool = False
-    risk_high = False
+    # ── bước 1: đánh dấu risk ────────────────────────────────────
+    matched_risk = [kw for kw in risk_keywords if kw in task]
+    has_unknown_error = bool(unknown_error_re.search(task))
 
-    # Ví dụ routing cơ bản — nhóm phát triển thêm:
-    policy_keywords = ["hoàn tiền", "refund", "flash sale", "license", "cấp quyền", "access", "level 3"]
-    risk_keywords = ["emergency", "khẩn cấp", "2am", "không rõ", "err-"]
+    risk_high = bool(matched_risk or has_unknown_error)
+    risk_desc = (
+        ", ".join(matched_risk) + (" + unknown error code" if has_unknown_error else "")
+        if matched_risk
+        else ("unknown error code" if has_unknown_error else "")
+    )
 
-    if any(kw in task for kw in policy_keywords):
+    # ── bước 2: chọn route theo độ ưu tiên ──────────────────────
+    matched_policy    = [kw for kw in policy_keywords    if kw in task]
+    matched_retrieval = [kw for kw in retrieval_keywords if kw in task]
+
+    if matched_policy:
         route = "policy_tool_worker"
-        route_reason = f"task contains policy/access keyword"
+        route_reason = f"policy/access keyword matched: [{', '.join(matched_policy)}]"
         needs_tool = True
+    elif matched_retrieval:
+        route = "retrieval_worker"
+        route_reason = f"retrieval keyword matched: [{', '.join(matched_retrieval)}]"
+        needs_tool = False
+    else:
+        route = "retrieval_worker"
+        route_reason = "default: no specific keyword → retrieval"
+        needs_tool = False
 
-    if any(kw in task for kw in risk_keywords):
-        risk_high = True
-        route_reason += " | risk_high flagged"
+    if risk_high:
+        route_reason += f" | risk_high [{risk_desc}]"
 
-    # Human review override
-    if risk_high and "err-" in task:
+    # ── bước 3: human review override ────────────────────────────
+    if risk_high and has_unknown_error:
         route = "human_review"
-        route_reason = "unknown error code + risk_high → human review"
+        route_reason = f"unknown error code + risk_high → human review"
+        needs_tool = False
 
+    # ── ghi vào state ─────────────────────────────────────────────
     state["supervisor_route"] = route
     state["route_reason"] = route_reason
     state["needs_tool"] = needs_tool
     state["risk_high"] = risk_high
-    state["history"].append(f"[supervisor] route={route} reason={route_reason}")
+    state["history"].append(f"[supervisor] route={route} | reason={route_reason}")
 
     return state
 
